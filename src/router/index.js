@@ -79,7 +79,19 @@ export const constantRoutes = [
         path: 'dashboard',
         component: () => import('@/views/dashboard/index'),
         name: 'Dashboard',
-        meta: { title: '主页', icon: 'dashboard', affix: true }
+        meta: { title: 'Dashboard', icon: 'dashboard', affix: true }
+      }
+    ]
+  },
+  {
+    path: '/',
+    component: Layout,
+    children: [
+      {
+        path: 'blogwriting',
+        component: () => import('@/views/example/create'),
+        name: 'Documentation',
+        meta: { title: 'Create a new Blog', icon: 'edit', affix: true }
       }
     ]
   },
