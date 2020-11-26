@@ -19,7 +19,6 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
-// I was once in your shoes
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

@@ -12,7 +12,7 @@
         :on-success="handleSuccess"
         :before-upload="beforeUpload"
         class="editor-slide-upload"
-        action="https://httpbin.org/post"
+        action="http://localhost:10022/upload/post"
         list-type="picture-card"
       >
         <el-button size="small" type="primary">
@@ -84,6 +84,15 @@ export default {
       }
     },
     beforeUpload(file) {
+      const isJPG = file.type === 'image/jpeg'
+      const isPNG = file.type === 'image/png'
+      if (!(isJPG || isPNG)) {
+        this.$message({
+          type: 'warning',
+          message: 'The format of images can only be jpeg or png!'
+        })
+        return false
+      }
       const _self = this
       const _URL = window.URL || window.webkitURL
       const fileName = file.uid
@@ -94,6 +103,7 @@ export default {
         img.onload = function() {
           _self.listObj[fileName] = { hasSuccess: false, uid: file.uid, width: this.width, height: this.height }
         }
+        console.log(img)
         resolve(true)
       })
     }

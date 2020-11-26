@@ -770,17 +770,18 @@ export default {
         createImgUrl
       } = this
       const fmData = new FormData()
+      console.log(data2blob(createImgUrl, mime))
       fmData.append(
-        field,
+        'file',
         data2blob(createImgUrl, mime),
-        field + '.' + imgFormat
+        'file'
       )
       // 添加其他参数
-      if (typeof params === 'object' && params) {
-        Object.keys(params).forEach(k => {
-          fmData.append(k, params[k])
-        })
-      }
+      // if (typeof params === 'object' && params) {
+      //   Object.keys(params).forEach(k => {
+      //     fmData.append(k, params[k])
+      //   })
+      // }
       // 监听进度回调
       // const uploadProgress = (event) => {
       //   if (event.lengthComputable) {
@@ -797,8 +798,9 @@ export default {
         data: fmData
       })
         .then(resData => {
+          console.log(resData)
           this.loading = 2
-          this.$emit('crop-upload-success', resData.data)
+          this.$emit('crop-upload-success', resData)
         })
         .catch(err => {
           if (this.value) {

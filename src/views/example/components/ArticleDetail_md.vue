@@ -17,7 +17,22 @@
       <div class="createPost-main-container">
         <el-row>
           <Warning />
-
+          <div style="display:flex;align-items:center;">
+            <pan-thumb :image="postForm.image_uri" />
+            <el-button type="primary" icon="el-icon-upload" style="margin-left:100px" @click="imagecropperShow=true">
+              {{ ''===postForm.image_uri?'Upload':'Change' }} Your Article Cover
+            </el-button>
+          </div>
+          <image-cropper
+            v-show="imagecropperShow"
+            :key="imagecropperKey"
+            :width="300"
+            :height="300"
+            url="http://localhost:10022/upload/post"
+            lang-type="en"
+            @close="close"
+            @crop-upload-success="cropSuccess"
+          />
           <el-col :span="24">
             <el-form-item style="margin-bottom: 40px;" prop="title">
               <MDinput v-model="postForm.title" :maxlength="100" name="name" required>
@@ -62,17 +77,19 @@
           <el-input v-model="postForm.content_short" :rows="1" type="textarea" class="article-textarea" autosize placeholder="Please enter the content" />
           <span v-show="contentShortLength" class="word-counter">{{ contentShortLength }}words</span>
         </el-form-item>
-
-        <el-form-item prop="content" style="margin-bottom: 30px;">
-          <Tinymce ref="editor" v-model="postForm.content" :height="400" />
-        </el-form-item>
-
+        <!-- <el-form-item prop="content" style="margin-bottom: 30px;">
+           <markdown-editor ref="markdownEditor" v-model="postForm.content" height="200px" />
+        </el-form-item> -->
+        <markdown-editor height="300px" @input="setValue" />
       </div>
     </el-form>
   </div>
 </template>
 
 <script>
+import ImageCropper from '@/components/ImageCropper'
+import PanThumb from '@/components/PanThumb'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import Tinymce from '@/components/Tinymce'
 import Upload from '@/components/Upload/SingleImage3'
 import MDinput from '@/components/MDinput'
@@ -88,7 +105,6 @@ const defaultForm = {
   title: '', // 文章题目
   content: '', // 文章内容
   content_short: '', // 文章摘要
-  source_uri: '', // 文章外链
   image_uri: '', // 文章图片
   display_time: undefined, // 前台展示时间
   id: undefined,
@@ -99,7 +115,7 @@ const defaultForm = {
 
 export default {
   name: 'ArticleDetail',
-  components: { Tinymce, MDinput, Upload, Sticky, Warning, CommentDropdown, PlatformDropdown, SourceUrlDropdown },
+  components: { ImageCropper, PanThumb, Tinymce, MDinput, Upload, Sticky, Warning, CommentDropdown, PlatformDropdown, SourceUrlDropdown, MarkdownEditor },
   props: {
     isEdit: {
       type: Boolean,
@@ -143,7 +159,10 @@ export default {
         content: [{ validator: validateRequire }],
         source_uri: [{ validator: validateSourceUri, trigger: 'blur' }]
       },
-      tempRoute: {}
+      tempRoute: {},
+      imagecropperShow: false,
+      imagecropperKey: 0
+
     }
   },
   computed: {
@@ -175,6 +194,18 @@ export default {
     this.tempRoute = Object.assign({}, this.$route)
   },
   methods: {
+    cropSuccess(resData) {
+      console.log(resData)
+      this.imagecropperShow = false
+      this.imagecropperKey = this.imagecropperKey + 1
+      this.postForm.image_uri = resData.files.file
+    },
+    close() {
+      this.imagecropperShow = false
+    },
+    setValue(val) {
+      this.postForm.content = val
+    },
     fetchData(id) {
       fetchArticle(id).then(response => {
         this.postForm = response.data
@@ -282,5 +313,11 @@ export default {
     border-radius: 0px;
     border-bottom: 1px solid #bfcbd9;
   }
+}
+.editor-container{
+  margin-bottom: 30px;
+}
+.tag-title{
+  margin-bottom: 5px;
 }
 </style>

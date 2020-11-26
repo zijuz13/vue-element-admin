@@ -24,7 +24,7 @@ export default {
     },
     width: {
       type: String,
-      default: '150px'
+      default: '300px'
     },
     height: {
       type: String,
@@ -38,7 +38,7 @@ export default {
 .pan-item {
   width: 200px;
   height: 200px;
-  border-radius: 50%;
+  /* border-radius: 50%; */
   display: inline-block;
   position: relative;
   cursor: default;
@@ -55,7 +55,6 @@ export default {
   height: 100%;
   background-position: center center;
   background-size: cover;
-  border-radius: 50%;
   overflow: hidden;
   position: absolute;
   transform-origin: 95% 40%;
@@ -79,7 +78,7 @@ export default {
   position: absolute;
   width: inherit;
   height: inherit;
-  border-radius: 50%;
+  /* border-radius: 50%; */
   overflow: hidden;
   box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.05);
 }

@@ -84,14 +84,24 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/',
+    path: '/blogwriting',
     component: Layout,
+    meta: {
+      title: 'Create a new blog',
+      icon: 'edit'
+    },
     children: [
       {
-        path: 'blogwriting',
+        path: 'byricheditor',
         component: () => import('@/views/example/create'),
         name: 'Documentation',
-        meta: { title: 'Create a new Blog', icon: 'edit', affix: true }
+        meta: { title: 'By Rich Text Editor' }
+      },
+      {
+        path: 'bymarkdown',
+        component: () => import('@/views/example/components/ArticleDetail_md'),
+        name: 'Documentation1',
+        meta: { title: 'By Markdown Editor' }
       }
     ]
   },
@@ -150,7 +160,7 @@ export const asyncRoutes = [
     meta: {
       title: 'Permission',
       icon: 'lock',
-      roles: ['admin', 'editor'] // you can set roles in root nav
+      roles: ['admin', 'user'] // you can set roles in root nav
     },
     children: [
       {

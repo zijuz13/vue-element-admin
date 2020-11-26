@@ -4,13 +4,12 @@
 
 <script>
 // deps for editor
-import 'codemirror/lib/codemirror.css' // codemirror
-import 'tui-editor/dist/tui-editor.css' // editor ui
-import 'tui-editor/dist/tui-editor-contents.css' // editor content
-
-import Editor from 'tui-editor'
+import 'codemirror/lib/codemirror.css' // Editor's Dependency Style
+import '@toast-ui/editor/dist/toastui-editor.css' // Editor's Style
+// import Editor from 'tui-editor'
+import Editor from '@toast-ui/editor'
 import defaultOptions from './default-options'
-
+import { uploadImage } from '@/api/upload'
 export default {
   name: 'MarkdownEditor',
   props: {
@@ -57,6 +56,12 @@ export default {
       options.initialEditType = this.mode
       options.height = this.height
       options.language = this.language
+      options.hooks = {}
+      const that = this
+      // 自定义上传钩子设置
+      options.hooks['addImageBlobHook'] = function(blob, callback) {
+        that.upload(blob, callback)
+      }
       return options
     }
   },
@@ -84,6 +89,22 @@ export default {
     this.destroyEditor()
   },
   methods: {
+    upload(blob, callback) {
+      const isJPG = blob.type === 'image/jpeg'
+      const isPNG = blob.type === 'image/png'
+      if (!(isJPG || isPNG)) {
+        this.$message({
+          type: 'warning',
+          message: 'The format of images can only be jpeg or png!'
+        })
+        return
+      }
+      const form = new FormData()
+      form.append('file', blob, 'file')
+      uploadImage(form).then(resp => {
+        callback(resp.files.file, blob.type)
+      })
+    },
     initEditor() {
       this.editor = new Editor({
         el: document.getElementById(this.id),
@@ -93,7 +114,7 @@ export default {
         this.editor.setValue(this.value)
       }
       this.editor.on('change', () => {
-        this.$emit('input', this.editor.getValue())
+        this.$emit('input', this.getHtml())
       })
     },
     destroyEditor() {
@@ -103,9 +124,6 @@ export default {
     },
     setValue(value) {
       this.editor.setValue(value)
-    },
-    getValue() {
-      return this.editor.getValue()
     },
     setHtml(value) {
       this.editor.setHtml(value)

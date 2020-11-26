@@ -1,13 +1,7 @@
 <template>
   <aside>
-    Creating and editing pages cannot be cached by keep-alive because keep-alive include does not currently support
-    caching based on routes, so it is currently cached based on component name. If you want to achieve a similar caching
-    effect, you can use a browser caching scheme such as localStorage. Or do not use keep-alive include to cache all
-    pages directly. See details
-    <a
-      href="https://panjiachen.github.io/vue-element-admin-site/guide/essentials/tags-view.html"
-      target="_blank"
-    >Document</a>
+    Here you can simply write what you want to write, and your website will then post it on the home page according to its date.
+    The upload plugin(image type checking, Promise async upload and so on) and back-end image storing is implemented by Zijun Zhou(@Huawei Company)
   </aside>
 </template>
 
