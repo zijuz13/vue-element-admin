@@ -1,3 +1,4 @@
+// Date to CHN
 export function formatDate(d) {
   const day = d.getDate()
   const month = d.getMonth() + 1

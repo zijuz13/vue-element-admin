@@ -3,9 +3,7 @@
     <el-form ref="postForm" :model="postForm" :rules="rules" class="form-container">
 
       <sticky :z-index="10" :class-name="'sub-navbar '+postForm.status">
-        <CommentDropdown v-model="postForm.comment_disabled" />
-        <PlatformDropdown v-model="postForm.platforms" />
-        <SourceUrlDropdown v-model="postForm.source_uri" />
+        <CommentDropdown v-model="postForm.commentstatus" />
         <el-button v-loading="loading" style="margin-left: 10px;" type="success" @click="submitForm">
           Publish
         </el-button>
@@ -17,7 +15,22 @@
       <div class="createPost-main-container">
         <el-row>
           <Warning />
-
+          <div style="display:flex;align-items:center;">
+            <pan-thumb :image="postForm.image_uri" />
+            <el-button type="primary" icon="el-icon-upload" style="margin-left:100px" @click="imagecropperShow=true">
+              {{ ''===postForm.image_uri?'Upload':'Change' }} Your Article Cover
+            </el-button>
+          </div>
+          <image-cropper
+            v-show="imagecropperShow"
+            :key="imagecropperKey"
+            :width="300"
+            :height="300"
+            url="http://localhost:10022/upload/post"
+            lang-type="en"
+            @close="close"
+            @crop-upload-success="cropSuccess"
+          />
           <el-col :span="24">
             <el-form-item style="margin-bottom: 40px;" prop="title">
               <MDinput v-model="postForm.title" :maxlength="100" name="name" required>
@@ -28,10 +41,8 @@
             <div class="postInfo-container">
               <el-row>
                 <el-col :span="8">
-                  <el-form-item label-width="60px" label="Author:" class="postInfo-container-item">
-                    <el-select v-model="postForm.author" :remote-method="getRemoteUserList" filterable default-first-option remote placeholder="Search user">
-                      <el-option v-for="(item,index) in userListOptions" :key="item+index" :label="item" :value="item" />
-                    </el-select>
+                  <el-form-item label-width="60px" label="Author:" prop="author" class="postInfo-container-item">
+                    <el-input v-model="postForm.author" placeholder="Author Name" />
                   </el-form-item>
                 </el-col>
 
@@ -73,33 +84,35 @@
 </template>
 
 <script>
+import ImageCropper from '@/components/ImageCropper'
+import PanThumb from '@/components/PanThumb'
 import Tinymce from '@/components/Tinymce'
 import Upload from '@/components/Upload/SingleImage3'
 import MDinput from '@/components/MDinput'
 import Sticky from '@/components/Sticky' // 粘性header组件
 import { validURL } from '@/utils/validate'
-import { fetchArticle } from '@/api/article'
+import { updateArticle, fetchArticle, createArticle } from '@/api/article'
 import { searchUser } from '@/api/remote-search'
 import Warning from './Warning'
 import { CommentDropdown, PlatformDropdown, SourceUrlDropdown } from './Dropdown'
+import { formatDate } from '@/api/format'
 
 const defaultForm = {
   status: 'draft',
   title: '', // 文章题目
   content: '', // 文章内容
   content_short: '', // 文章摘要
-  source_uri: '', // 文章外链
   image_uri: '', // 文章图片
   display_time: undefined, // 前台展示时间
   id: undefined,
-  platforms: ['a-platform'],
-  comment_disabled: false,
-  importance: 0
+  importance: 0,
+  author: '',
+  commentstatus: true
 }
 
 export default {
   name: 'ArticleDetail',
-  components: { Tinymce, MDinput, Upload, Sticky, Warning, CommentDropdown, PlatformDropdown, SourceUrlDropdown },
+  components: { PanThumb, ImageCropper, Tinymce, MDinput, Upload, Sticky, Warning, CommentDropdown, PlatformDropdown, SourceUrlDropdown },
   props: {
     isEdit: {
       type: Boolean,
@@ -113,7 +126,7 @@ export default {
           message: rule.field + ' is required!',
           type: 'error'
         })
-        callback(new Error(rule.field + 'is required!'))
+        callback(new Error(rule.field + ' is required!'))
       } else {
         callback()
       }
@@ -141,9 +154,12 @@ export default {
         image_uri: [{ validator: validateRequire }],
         title: [{ validator: validateRequire }],
         content: [{ validator: validateRequire }],
-        source_uri: [{ validator: validateSourceUri, trigger: 'blur' }]
+        source_uri: [{ validator: validateSourceUri, trigger: 'blur' }],
+        author: [{ validator: validateRequire, trigger: 'blur' }]
       },
-      tempRoute: {}
+      tempRoute: {},
+      imagecropperShow: false,
+      imagecropperKey: 0
     }
   },
   computed: {
@@ -175,6 +191,14 @@ export default {
     this.tempRoute = Object.assign({}, this.$route)
   },
   methods: {
+    close() {
+      this.imagecropperShow = false
+    },
+    cropSuccess(resData) {
+      this.imagecropperShow = false
+      this.imagecropperKey = this.imagecropperKey + 1
+      this.postForm.image_uri = resData.files.file
+    },
     fetchData(id) {
       fetchArticle(id).then(response => {
         this.postForm = response.data
@@ -202,18 +226,50 @@ export default {
       document.title = `${title} - ${this.postForm.id}`
     },
     submitForm() {
+      this.postForm['display_time'] = this.displayTime
       console.log(this.postForm)
       this.$refs.postForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$notify({
-            title: '成功',
-            message: '发布文章成功',
-            type: 'success',
-            duration: 2000
-          })
           this.postForm.status = 'published'
-          this.loading = false
+          if (this.postForm.id) {
+            updateArticle(this.postForm).then(resp => {
+              this.$notify({
+                title: 'success',
+                message: 'Article published successfully',
+                type: 'success',
+                duration: 2000
+              })
+              this.loading = false
+            }).catch(() => {
+              this.$notify({
+                title: 'Failed',
+                message: 'Cannot publish article, contact the programmer for information',
+                type: 'warning',
+                duration: 2000
+              })
+              this.loading = false
+            })
+          } else {
+            createArticle(this.postForm).then(resp => {
+              this.$notify({
+                title: 'success',
+                message: 'Article published successfully',
+                type: 'success',
+                duration: 2000
+              })
+              this.postForm.id = resp
+              this.loading = false
+            }).catch(() => {
+              this.$notify({
+                title: 'Failed',
+                message: 'Cannot publish article, contact the programmer for information',
+                type: 'warning',
+                duration: 2000
+              })
+              this.loading = false
+            })
+          }
         } else {
           console.log('error submit!!')
           return false
@@ -223,18 +279,49 @@ export default {
     draftForm() {
       if (this.postForm.content.length === 0 || this.postForm.title.length === 0) {
         this.$message({
-          message: '请填写必要的标题和内容',
+          message: 'Please fill the necessary field first',
           type: 'warning'
         })
         return
       }
-      this.$message({
-        message: '保存成功',
-        type: 'success',
-        showClose: true,
-        duration: 1000
-      })
+      this.postForm['display_time'] = this.displayTime
       this.postForm.status = 'draft'
+      if (this.postForm.id) {
+        updateArticle(this.postForm).then(resp => {
+          this.$notify({
+            title: 'success',
+            message: 'Article saved successfully',
+            type: 'success',
+            duration: 2000
+          })
+          this.loading = false
+        }).catch(() => {
+          this.$notify({
+            title: 'Failed',
+            message: 'Cannot save article, contact the programmer for information',
+            type: 'warning',
+            duration: 2000
+          })
+          this.loading = false
+        })
+      } else {
+        createArticle(this.postForm).then(resp => {
+          this.postForm.id = resp
+          this.$notify({
+            title: 'success',
+            message: 'Article saved successfully',
+            type: 'success',
+            duration: 2000
+          })
+        }).catch(() => {
+          this.$notify({
+            title: 'Failed',
+            message: 'Cannot save article, contact the programmer for information',
+            type: 'warning',
+            duration: 2000
+          })
+        })
+      }
     },
     getRemoteUserList(query) {
       searchUser(query).then(response => {

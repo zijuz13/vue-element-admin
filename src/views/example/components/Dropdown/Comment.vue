@@ -1,16 +1,16 @@
 <template>
   <el-dropdown :show-timeout="100" trigger="click">
     <el-button plain>
-      {{ !comment_disabled?'Comment: opened':'Comment: closed' }}
+      {{ comment_disabled?'Comment: opened':'Comment: closed' }}
       <i class="el-icon-caret-bottom el-icon--right" />
     </el-button>
     <el-dropdown-menu slot="dropdown" class="no-padding">
       <el-dropdown-item>
         <el-radio-group v-model="comment_disabled" style="padding: 10px;">
-          <el-radio :label="true">
+          <el-radio :label="false">
             Close comment
           </el-radio>
-          <el-radio :label="false">
+          <el-radio :label="true">
             Open comment
           </el-radio>
         </el-radio-group>

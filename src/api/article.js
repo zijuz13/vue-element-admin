@@ -26,7 +26,7 @@ export function fetchPv(pv) {
 
 export function createArticle(data) {
   return request({
-    url: '/vue-element-admin/article/create',
+    url: 'http://localhost:10010/api/blog/blog',
     method: 'post',
     data
   })
@@ -34,8 +34,8 @@ export function createArticle(data) {
 
 export function updateArticle(data) {
   return request({
-    url: '/vue-element-admin/article/update',
-    method: 'post',
+    url: 'http://localhost:10010/api/blog/blog',
+    method: 'put',
     data
   })
 }
