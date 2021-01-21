@@ -26,7 +26,7 @@
             :key="imagecropperKey"
             :width="300"
             :height="300"
-            url="http://localhost:10022/upload/post"
+            :url="uploadUrl"
             lang-type="en"
             @close="close"
             @crop-upload-success="cropSuccess"
@@ -40,13 +40,17 @@
 
             <div class="postInfo-container">
               <el-row>
-                <el-col :span="8">
+                <el-col :span="5">
                   <el-form-item label-width="60px" label="Author:" prop="author" class="postInfo-container-item">
                     <el-input v-model="postForm.author" placeholder="Author Name" />
                   </el-form-item>
                 </el-col>
-
-                <el-col :span="10">
+                <el-col :span="7">
+                  <el-form-item label-width="80px" label="Category:" prop="category" class="postInfo-container-item">
+                    <el-input v-model="postForm.category" placeholder="Example: Travel,Event" style="width:300px"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
                   <el-form-item label-width="120px" label="Publish Time:" class="postInfo-container-item">
                     <el-date-picker v-model="displayTime" type="datetime" format="yyyy-MM-dd HH:mm:ss" placeholder="Select date and time" />
                   </el-form-item>
@@ -96,7 +100,7 @@ import { searchUser } from '@/api/remote-search'
 import Warning from './Warning'
 import { CommentDropdown, PlatformDropdown, SourceUrlDropdown } from './Dropdown'
 import { formatDate } from '@/api/format'
-
+const uploadUrl=process.env.VUE_APP_ADDRESS+"/edit/upload/post";
 const defaultForm = {
   status: 'draft',
   title: '', // 文章题目
@@ -105,7 +109,7 @@ const defaultForm = {
   image_uri: '', // 文章图片
   display_time: undefined, // 前台展示时间
   id: undefined,
-  importance: 0,
+  importance: 1,
   author: '',
   commentstatus: true
 }
@@ -147,6 +151,7 @@ export default {
       }
     }
     return {
+      uploadUrl,
       postForm: Object.assign({}, defaultForm),
       loading: false,
       userListOptions: [],
@@ -155,11 +160,13 @@ export default {
         title: [{ validator: validateRequire }],
         content: [{ validator: validateRequire }],
         source_uri: [{ validator: validateSourceUri, trigger: 'blur' }],
-        author: [{ validator: validateRequire, trigger: 'blur' }]
+        author: [{ validator: validateRequire, trigger: 'blur' }],
+        category:[{ validator: validateRequire, trigger: 'blur' }]
       },
       tempRoute: {},
       imagecropperShow: false,
-      imagecropperKey: 0
+      imagecropperKey: 0,
+      category:''
     }
   },
   computed: {
@@ -201,12 +208,13 @@ export default {
     },
     fetchData(id) {
       fetchArticle(id).then(response => {
-        this.postForm = response.data
-
-        // just for test
-        this.postForm.title += `   Article Id:${this.postForm.id}`
-        this.postForm.content_short += `   Article Id:${this.postForm.id}`
-
+        response.category=JSON.parse(response.category).join(",");
+        this.postForm = response;
+        //需要将时间戳转换为数字才可以变成日期
+        this.displayTime=Number(response.display_time+'');
+        // // just for test
+        // this.postForm.title += `   Article Id:${this.postForm.id}`
+        // this.postForm.content_short += `   Article Id:${this.postForm.id}`
         // set tagsview title
         this.setTagsViewTitle()
 
@@ -216,24 +224,31 @@ export default {
         console.log(err)
       })
     },
+    handleCategory(c){
+     let cArray=c.split(",");
+     return JSON.stringify(cArray);
+    },
     setTagsViewTitle() {
-      const title = 'Edit Article'
-      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.id}` })
-      this.$store.dispatch('tagsView/updateVisitedView', route)
+      // const title = 'Edit Article'
+      // const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.id}` })
+      this.$store.dispatch('tagsView/updateVisitedView', this.tempRoute)
     },
     setPageTitle() {
-      const title = 'Edit Article'
-      document.title = `${title} - ${this.postForm.id}`
+      const title = 'Editing Blog'
+      document.title = `${title}`
     },
     submitForm() {
-      this.postForm['display_time'] = this.displayTime
-      console.log(this.postForm)
+      let postForm=Object.assign({},this.postForm);
+      postForm['display_time'] = this.displayTime
+      postForm['type']=0;
+      postForm['category']=this.handleCategory(postForm['category']);
+      console.log(postForm)
       this.$refs.postForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.postForm.status = 'published'
-          if (this.postForm.id) {
-            updateArticle(this.postForm).then(resp => {
+          postForm.status = 'published'
+          if (postForm.id) {
+            updateArticle(postForm).then(resp => {
               this.$notify({
                 title: 'success',
                 message: 'Article published successfully',
@@ -251,7 +266,7 @@ export default {
               this.loading = false
             })
           } else {
-            createArticle(this.postForm).then(resp => {
+            createArticle(postForm).then(resp => {
               this.$notify({
                 title: 'success',
                 message: 'Article published successfully',
@@ -284,10 +299,13 @@ export default {
         })
         return
       }
-      this.postForm['display_time'] = this.displayTime
-      this.postForm.status = 'draft'
-      if (this.postForm.id) {
-        updateArticle(this.postForm).then(resp => {
+      let postForm=Object.assign({},this.postForm);
+      postForm['display_time'] = this.displayTime
+      postForm['type']=0;
+      postForm['category']=this.handleCategory(postForm['category']);
+      postForm.status = 'draft'
+      if (postForm.id) {
+        updateArticle(postForm).then(resp => {
           this.$notify({
             title: 'success',
             message: 'Article saved successfully',
@@ -305,7 +323,7 @@ export default {
           this.loading = false
         })
       } else {
-        createArticle(this.postForm).then(resp => {
+        createArticle(postForm).then(resp => {
           this.postForm.id = resp
           this.$notify({
             title: 'success',

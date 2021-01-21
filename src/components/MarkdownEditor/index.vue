@@ -67,8 +67,8 @@ export default {
   },
   watch: {
     value(newValue, preValue) {
-      if (newValue !== preValue && newValue !== this.editor.getValue()) {
-        this.editor.setValue(newValue)
+      if (newValue !== preValue && newValue !== this.editor.getHtml()) {
+        this.editor.setHtml(newValue)
       }
     },
     language(val) {

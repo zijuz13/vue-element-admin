@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 export function uploadImage(data) {
   return request({
-    url: 'http://localhost:10022/upload/post',
+    url: process.env.VUE_APP_ADDRESS+'/edit/upload/post',
     method: 'post',
     data
   })

@@ -12,7 +12,7 @@
         :on-success="handleSuccess"
         :before-upload="beforeUpload"
         class="editor-slide-upload"
-        action="http://localhost:10022/upload/post"
+        :action="uploadUrl"
         list-type="picture-card"
       >
         <el-button size="small" type="primary">
@@ -44,7 +44,8 @@ export default {
     return {
       dialogVisible: false,
       listObj: {},
-      fileList: []
+      fileList: [],
+      uploadUrl:process.env.VUE_APP_ADDRESS+'/edit/upload/post'
     }
   },
   methods: {

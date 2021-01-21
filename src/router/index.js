@@ -50,6 +50,30 @@ export const constantRoutes = [
       }
     ]
   },
+
+  {
+    path: '/update',
+    component: Layout,
+    hidden:true,
+    children: [
+      {
+        path: '/md/:id',
+        component: () => import('@/Articles/edit_md')
+      },
+      {
+        path: '/re/:id',
+        component: () => import('@/Articles/edit')
+      }
+    ]
+  },
+  // {
+  //   path: '/re/:id',
+  //   component: () => import('@/Articles/edit')
+  // },
+  // {
+  //   path: '/re/:id',
+  //   component: () => import('@/Articles/edit')
+  // },
   {
     path: '/login',
     component: () => import('@/views/login/index'),
@@ -94,14 +118,38 @@ export const constantRoutes = [
       {
         path: 'byricheditor',
         component: () => import('@/views/example/create'),
-        name: 'Documentation',
+        name: 'Rich Editor',
         meta: { title: 'By Rich Text Editor' }
       },
       {
         path: 'bymarkdown',
         component: () => import('@/views/example/components/ArticleDetail_md'),
-        name: 'Documentation1',
+        name: 'Mark Down',
         meta: { title: 'By Markdown Editor' }
+      }
+    ]
+  },
+  {
+    path: '/articlelist',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/Articles/ArticleTable'),
+        name: 'All Blogs',
+        meta: { title: 'All Blogs', icon: 'list', affix: true }
+      }
+    ]
+  },
+  {
+    path: '/projectlist',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/Projects/ProjectTable'),
+        name: 'Project Table',
+        meta: { title: 'All Projects', icon: 'documentation', affix: true }
       }
     ]
   },
